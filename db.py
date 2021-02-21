@@ -7,7 +7,10 @@ import random
 
 from sqlitedict import SqliteDict
 
-DATABASE_FILE = "./my_db.sqlite"
+from config import settings
+
+# TODO: have some real encapsulation and OOP here
+DATABASE_FILE = settings.common.database_file
 
 
 class SessionState(enum.Enum):

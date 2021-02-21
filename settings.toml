@@ -1,0 +1,20 @@
+dynaconf_merge = true # must be enabled
+
+[discord]
+check_interval_s = 60                      # Interval to check for registered users and delete expired sessions
+expiry_s         = 43200                   # A session expires after this many seconds
+prefix           = "+"                     # Prefix for using the bot command 'verify'
+role_name        = "UW Verified"           # Name of role to apply to verified useres
+url              = "http://localhost:5000" # The base URL for verification links (no trailing slash)
+# discord_bot_token in .secrets.toml
+
+[server]
+allowed_domain = "uwaterloo.ca"
+smtp_from_addr = ""
+smtp_host      = ""
+smtp_port      = ""
+smtp_user      = ""
+# smtp_pass in .secrets.toml
+
+[common]
+database_file = "andrewdb.sqlite"

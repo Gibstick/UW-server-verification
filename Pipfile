@@ -8,6 +8,7 @@ flask = "*"
 sqlitedict = "*"
 discord = "*"
 gevent = "*"
+dynaconf = "*"
 
 [dev-packages]
 yapf = "*"

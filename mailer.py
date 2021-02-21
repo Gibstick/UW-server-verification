@@ -3,7 +3,7 @@ import ssl
 from email.message import EmailMessage
 
 
-def _generate_message(email, from_addr, code, name):
+def _generate_message(to_addr, from_addr, code, name):
     msg = EmailMessage()
     body = (
         f"Your verification code is {code}",
@@ -13,7 +13,7 @@ def _generate_message(email, from_addr, code, name):
     msg.set_content("\n".join(body))
     msg['Subject'] = "Email Verification Code from AndrewBot"
     msg['From'] = from_addr
-    msg['To'] = str(email)
+    msg['To'] = to_addr
     return msg
 
 
@@ -28,8 +28,8 @@ class SMTPMailer(object):
         self.password = password
         self.from_addr = from_addr
 
-    def send(self, address, code, name):
-        msg = _generate_message(address, self.from_addr, code, name)
+    def send(self, to_addr, code, name):
+        msg = _generate_message(to_addr, self.from_addr, code, name)
         # TODO: configurable TLS vs STARTTLS
         context = ssl.create_default_context()
         server = smtplib.SMTP(self.host, self.port)
@@ -43,7 +43,7 @@ class PrintMailer(object):
     """A mailer that just prints things instead of sending for real."""
     __slots__ = []
 
-    def send(self, address, code, name):
-        msg = _generate_message(address, "test@example.com", code, name)
+    def send(self, to_addr, code, name):
+        msg = _generate_message(to_addr, "test@example.com", code, name)
         print("Email to send")
         print(msg)

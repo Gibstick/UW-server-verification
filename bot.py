@@ -6,19 +6,26 @@ import discord
 from discord.ext import commands
 from sqlitedict import SqliteDict
 
-import config
+from config import settings
 import db
-
-ROLE_NAME = "UW Verified"
 
 
 class VerifyCog(commands.Cog):
-    def __init__(self, bot, check_interval, expiry_seconds, url, *args,
-                 **kwargs):
+    def __init__(
+        self,
+        bot,
+        check_interval,
+        expiry_seconds,
+        url,
+        role_name,
+        *args,
+        **kwargs,
+    ):
         self.bot = bot
         self.check_interval = check_interval
         self.expiry_seconds = expiry_seconds
         self.url = url
+        self.role_name = role_name
         bot.loop.create_task(self.maintenance_loop())
         super().__init__(*args, **kwargs)
 
@@ -29,11 +36,11 @@ class VerifyCog(commands.Cog):
         self.verified_roles = {}
         for guild in self.bot.guilds:
             for role in guild.roles:
-                if role.name == ROLE_NAME:
+                if role.name == self.role_name:
                     self.verified_roles[guild.id] = role.id
                     break
             else:
-                print(f"{ROLE_NAME} role not found in guild {guild}")
+                print(f"{self.role_name} role not found in guild {guild}")
         print("Bot is ready")
 
     async def maintenance_loop(self):
@@ -104,15 +111,14 @@ class VerifyCog(commands.Cog):
 
 
 def main():
-    configdata = config.read()
+    configdata = settings.discord
     bot = commands.Bot(command_prefix=configdata.prefix)
     bot.add_cog(
-        VerifyCog(
-            bot=bot,
-            check_interval=configdata.check_interval,
-            expiry_seconds=configdata.expiry_seconds,
-            url=configdata.url,
-        ))
+        VerifyCog(bot=bot,
+                  check_interval=configdata.check_interval_s,
+                  expiry_seconds=configdata.expiry_s,
+                  url=configdata.url,
+                  role_name=configdata.role_name))
     bot.run(configdata.token)
 
 

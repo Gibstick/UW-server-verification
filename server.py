@@ -8,27 +8,27 @@ from flask import Flask, abort, redirect, url_for, render_template, request
 from sqlitedict import SqliteDict
 
 import db
+from config import settings
 import mailer
 
 app = Flask(__name__)
 
-smtp_host = os.environ.get("ANDREWBOT_SMTP_HOST", None)
-smtp_port = os.environ.get("ANDREWBOT_SMTP_PORT", 587)
-smtp_user = os.environ.get("ANDREWBOT_SMTP_USER", None)
-smtp_pass = os.environ.get("ANDREWBOT_SMTP_PASS", None)
-smtp_from_addr = os.environ.get("ANDREWBOT_SMTP_FROM", None)
-allowed_domain = os.environ.get("ANDREWBOT_ALLOWED_DOMAIN", "uwaterloo.ca")
+smtp_host = settings.server.smtp_host
+smtp_port = settings.server.smtp_port
+smtp_user = settings.server.smtp_user
+smtp_pass = settings.server.smtp_pass
+smtp_from_addr = settings.server.smtp_from_addr
+allowed_domain = settings.server.allowed_domain
 
-
-if smtp_host is None:
+if not smtp_host:
     mail = mailer.PrintMailer()
 else:
     mail = mailer.SMTPMailer(
         host=smtp_host,
-        port=int(smtp_port),
+        port=smtp_port,
         username=smtp_user,
         password=smtp_pass,
-        from_addr=smtp_from_addr
+        from_addr=smtp_from_addr,
     )
 
 
@@ -44,12 +44,12 @@ def start(uuid):
         return redirect(url_for("verify_get", uuid=uuid), code=303)
 
     if request.method == "POST":
-        email = request.form["email"]
-        if not email.endswith(allowed_domain):
+        email_addr = request.form["email"]
+        if not email_addr.endswith(allowed_domain):
             # TODO: error feedback
             return redirect(url_for("start", uuid=uuid), code=303)
 
-        mail.send(email, session.verification_code, session.discord_name)
+        mail.send(email_addr, session.verification_code, session.discord_name)
         db.set_email_sent(uuid)
         return redirect(url_for("verify_get", uuid=uuid), code=303)
 
@@ -96,9 +96,11 @@ def success():
 def failure():
     return render_template("failed_verification.html")
 
+
 @app.route("/")
 def root():
     return render_template("index.html")
+
 
 @app.errorhandler(404)
 def page_not_found(e):
