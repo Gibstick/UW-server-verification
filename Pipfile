@@ -6,9 +6,9 @@ name = "pypi"
 [packages]
 flask = "*"
 sqlitedict = "*"
-discord = "*"
 gevent = "*"
 dynaconf = "*"
+"discord.py" = "*"
 
 [dev-packages]
 yapf = "*"
