@@ -1,4 +1,5 @@
 import smtplib
+import ssl
 from email.message import EmailMessage
 
 
@@ -6,7 +7,7 @@ def _generate_message(email, from_addr, code, name):
     msg = EmailMessage()
     body = (
         f"Your verification code is {code}",
-        ""
+        "\n"
         f"This email was triggered by {name}.",
     )
     msg.set_content("\n".join(body))
@@ -29,7 +30,10 @@ class SMTPMailer(object):
 
     def send(self, address, code, name):
         msg = _generate_message(address, self.from_addr, code, name)
-        server = smtplib.SMTP_SSL(self.host, self.port)
+        # TODO: configurable TLS vs STARTTLS
+        context = ssl.create_default_context()
+        server = smtplib.SMTP(self.host, self.port)
+        server.starttls(context=context)
         server.login(self.username, self.password)
         server.send_message(msg)
         server.quit()

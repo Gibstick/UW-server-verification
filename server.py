@@ -13,7 +13,7 @@ import mailer
 app = Flask(__name__)
 
 smtp_host = os.environ.get("ANDREWBOT_SMTP_HOST", None)
-smtp_port = os.environ.get("ANDREWBOT_SMTP_PORT", 465)
+smtp_port = os.environ.get("ANDREWBOT_SMTP_PORT", 587)
 smtp_user = os.environ.get("ANDREWBOT_SMTP_USER", None)
 smtp_pass = os.environ.get("ANDREWBOT_SMTP_PASS", None)
 smtp_from_addr = os.environ.get("ANDREWBOT_SMTP_FROM", None)
