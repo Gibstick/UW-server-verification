@@ -11,17 +11,21 @@ import db
 import mailer
 
 app = Flask(__name__)
+
 smtp_host = os.environ.get("ANDREWBOT_SMTP_HOST", None)
 smtp_port = os.environ.get("ANDREWBOT_SMTP_PORT", 465)
 smtp_user = os.environ.get("ANDREWBOT_SMTP_USER", None)
 smtp_pass = os.environ.get("ANDREWBOT_SMTP_PASS", None)
 smtp_from_addr = os.environ.get("ANDREWBOT_SMTP_FROM", None)
+allowed_domain = os.environ.get("ANDREWBOT_ALLOWED_DOMAIN", "uwaterloo.ca")
+
+
 if smtp_host is None:
     mail = mailer.PrintMailer()
 else:
     mail = mailer.SMTPMailer(
         host=smtp_host,
-        port=smtp_port,
+        port=int(smtp_port),
         username=smtp_user,
         password=smtp_pass,
         from_addr=smtp_from_addr
@@ -41,7 +45,7 @@ def start(uuid):
 
     if request.method == "POST":
         email = request.form["email"]
-        if not email.endswith("uwaterloo.ca"):
+        if not email.endswith(allowed_domain):
             # TODO: error feedback
             return redirect(url_for("start", uuid=uuid), code=303)
 
