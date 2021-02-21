@@ -6,11 +6,7 @@ from email.message import EmailMessage
 
 def _generate_message(to_addr, from_addr, code, name):
     msg = EmailMessage()
-    body = (
-        f"Your verification code is {code}",
-        "\n"
-        f"This email was triggered by {name}.",
-    )
+    body = (f"Your verification code is {code}.", )
     msg.set_content("\n".join(body))
     msg['Subject'] = "Email Verification Code from AndrewBot"
     msg['From'] = from_addr
