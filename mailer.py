@@ -40,6 +40,6 @@ class PrintMailer(object):
     __slots__ = []
 
     def send(self, address, code, name):
-        msg = _generate_message(address, code, name)
+        msg = _generate_message(address, "test@example.com", code, name)
         print("Email to send")
         print(msg)
