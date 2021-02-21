@@ -1,0 +1,3 @@
+*.sqlite
+*.toml
+.secrets.toml

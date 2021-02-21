@@ -1,0 +1,30 @@
+version: "3.7"
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: andrewbot/web
+    entrypoint: ["python", "/app/run_web.py"]
+    # entrypoint: ["ls", "-a"]
+    ports:
+      - "8080:5000"
+    volumes:
+      - andrewdb:/db
+      - ./settings.toml:/app/settings.toml:ro
+      - ./.secrets.toml:/app/.secrets.toml:ro
+
+  bot:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: andrewbot/discord
+    entrypoint: ["python", "/app/bot.py"]
+    # entrypoint: "ls -a"
+    volumes:
+      - andrewdb:/db
+      - ./settings.toml:/app/settings.toml:ro
+      - ./.secrets.toml:/app/.secrets.toml:ro
+
+volumes:
+  andrewdb:
