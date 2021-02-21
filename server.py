@@ -55,6 +55,7 @@ def start(uuid):
             # TODO: error feedback
             return redirect(url_for("start", uuid=uuid), code=303)
 
+        app.logger.info(f"User {session.discord_name} with id {session.user_id} sent an email")
         mail.send(email_addr, session.verification_code, session.discord_name)
         db.set_email_sent(uuid)
         return redirect(url_for("verify_get", uuid=uuid), code=303)
