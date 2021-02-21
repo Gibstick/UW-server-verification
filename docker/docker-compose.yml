@@ -6,7 +6,6 @@ services:
       dockerfile: docker/Dockerfile
     image: andrewbot/web
     entrypoint: ["python", "/app/run_web.py"]
-    # entrypoint: ["ls", "-a"]
     ports:
       - "8080:5000"
     volumes:
@@ -20,7 +19,6 @@ services:
       dockerfile: docker/Dockerfile
     image: andrewbot/discord
     entrypoint: ["python", "/app/bot.py"]
-    # entrypoint: "ls -a"
     volumes:
       - andrewdb:/db
       - ./settings.toml:/app/settings.toml:ro
