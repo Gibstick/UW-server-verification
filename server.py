@@ -1,8 +1,9 @@
+import logging
 import os
 import random
+import sys
 import time
 import uuid
-import configparser
 
 from flask import Flask, abort, redirect, url_for, render_template, request
 from sqlitedict import SqliteDict
@@ -11,7 +12,9 @@ import db
 from config import settings
 import mailer
 
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 app = Flask(__name__)
+app.name = "AndrewWeb"
 
 smtp_host = settings.server.smtp_host
 smtp_port = settings.server.smtp_port
@@ -31,6 +34,9 @@ else:
         from_addr=smtp_from_addr,
     )
 
+
+with app.app_context():
+    app.logger.info(f"Using {mail} for mail")
 
 @app.route("/start/<uuid>/email", methods=["POST", "GET"])
 def start(uuid):
@@ -108,6 +114,10 @@ def page_not_found(e):
 
 
 if __name__ == "__main__":
+    logging.getLogger("sqlitedict").setLevel(logging.WARNING)
+    app.logger.setLevel(logging.DEBUG)
+
     session_id = db._new_fake_session()
-    print(f"http://localhost:5000/start/{session_id}/email")
+    app.logger.debug(f"http://localhost:5000/start/{session_id}/email")
+
     app.run(debug=True)

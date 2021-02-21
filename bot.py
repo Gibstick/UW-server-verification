@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import sys
 import time
 import uuid
 
@@ -26,6 +28,9 @@ class VerifyCog(commands.Cog):
         self.expiry_seconds = expiry_seconds
         self.url = url
         self.role_name = role_name
+
+        self.logger = logging.getLogger("AndrewBot")
+
         bot.loop.create_task(self.maintenance_loop())
         super().__init__(*args, **kwargs)
 
@@ -33,6 +38,7 @@ class VerifyCog(commands.Cog):
     async def on_ready(self):
         # Search for a role called "UW Verified" in all servers and cache its
         # id by guild id
+        self.logger.info("Assembling role cache")
         self.verified_roles = {}
         for guild in self.bot.guilds:
             for role in guild.roles:
@@ -40,12 +46,14 @@ class VerifyCog(commands.Cog):
                     self.verified_roles[guild.id] = role.id
                     break
             else:
-                print(f"{self.role_name} role not found in guild {guild}")
-        print("Bot is ready")
+                self.logger.warning(
+                    f"{self.role_name} role not found in guild {guild}")
+        self.logger.info("Bot is ready")
 
     async def maintenance_loop(self):
         interval = self.check_interval
-        print(f"Sleeping {interval} seconds between maintenance iterations")
+        self.logger.info(
+            f"Sleeping {interval} seconds between maintenance iterations")
         while True:
             await self.bot.wait_until_ready()
 
@@ -57,17 +65,18 @@ class VerifyCog(commands.Cog):
                     member = await guild.fetch_member(user_id)
                     role_id = self.verified_roles.get(guild_id, None)
                     if role_id is None:
-                        print(
+                        self.logger.warning(
                             f"Skipping verification for {session.discord_name} because no role was found in {guild}"
                         )
                         continue
                     role = guild.get_role(role_id)
-                    print(
+                    self.logger.info(
                         f"Adding role to user {session.discord_name} with user id {member.id}"
                     )
                     await member.add_roles(role, reason="Verification Bot")
-                except Exception as e:
-                    print(f"Failed to add role to user in {guild_id}:\n{e}")
+                except Exception:
+                    self.logger.exception(
+                        f"Failed to add role to user in {guild_id}")
                     continue
                 db.delete_session(session_id)
 
@@ -88,6 +97,7 @@ class VerifyCog(commands.Cog):
         guild_id = ctx.guild.id
         name = f"{ctx.author.name}#{ctx.author.discriminator}"
         session_id = db.new_session(user_id, guild_id, name)
+        self.logger.info(f"Started new session for {name} {user_id}")
 
         verification_link = f"{self.url}/start/{session_id}/email"
 
@@ -111,6 +121,9 @@ class VerifyCog(commands.Cog):
 
 
 def main():
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    logging.getLogger("sqlitedict").setLevel(logging.WARNING)
+
     configdata = settings.discord
     bot = commands.Bot(command_prefix=configdata.prefix)
     bot.add_cog(
