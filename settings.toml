@@ -12,7 +12,7 @@ url              = "http://localhost:5000" # The base URL for verification links
 allowed_domain = "uwaterloo.ca"
 smtp_from_addr = ""
 smtp_host      = ""
-smtp_port      = ""
+smtp_port      = 0
 smtp_user      = ""
 # smtp_pass in .secrets.toml
 
