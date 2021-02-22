@@ -77,7 +77,7 @@ class VerifyCog(commands.Cog):
                     self.logger.exception(
                         f"Failed to add role to user in {guild_id}")
                     continue
-                self.sm.delete_session(user_id, session.uuid)
+                self.sm.delete_session(user_id)
 
             await self.sm.collect_garbage()
             await asyncio.sleep(interval)
@@ -115,6 +115,17 @@ class VerifyCog(commands.Cog):
             "https://uwaterloo.ca/library/sites/ca.library/files/uploads/images/img_0236_0.jpg"
         )
         await ctx.message.author.send(embed=embed)
+
+    @commands.command()
+    @commands.has_permissions(manage_roles=True)
+    async def reset_session(self, ctx, member: discord.Member):
+        """
+        Reset the session for a user. For users with manage roles permission only.
+        """
+        if not ctx.message.guild:
+            return
+        self.sm.delete_session(member.id)
+        await ctx.reply(f"Removed session for {member}")
 
 
 def main():

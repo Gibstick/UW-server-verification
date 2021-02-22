@@ -199,21 +199,17 @@ class SessionManager(object):
                 db.commit()
                 return session.remaining_attempts
 
-    def delete_session(self, user_id: int, uuid: uuid.UUID):
+    def delete_session(self, user_id: int):
         """
         Remove a session from the db.
         """
         with SqliteDict(self.database_file) as db:
             try:
-                session = self._get(db, user_id, uuid)
-                if session is None:
-                    raise KeyError
                 del db[user_id]
                 db.commit()
             except KeyError:
                 self.logger.warn(
-                    f"Attempted to delete nonexistent session for ({user_id}, {uuid})"
-                )
+                    f"Attempted to delete nonexistent session for {user_id}")
 
     def _expired(self, session: Session) -> bool:
         """
