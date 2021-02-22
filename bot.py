@@ -15,17 +15,17 @@ import db
 class VerifyCog(commands.Cog):
     def __init__(
         self,
-        bot,
-        check_interval,
-        expiry_seconds,
-        url,
-        role_name,
+        bot: discord.Client,
+        sm: db.SessionManager,
+        check_interval: int,
+        url: str,
+        role_name: str,
         *args,
         **kwargs,
     ):
         self.bot = bot
+        self.sm = sm
         self.check_interval = check_interval
-        self.expiry_seconds = expiry_seconds
         self.url = url
         self.role_name = role_name
 
@@ -57,8 +57,7 @@ class VerifyCog(commands.Cog):
         while True:
             await self.bot.wait_until_ready()
 
-            async for session_id, session in db.verified_user_ids(
-                    self.expiry_seconds):
+            async for session in self.sm.verified_user_ids():
                 user_id, guild_id = session.user_id, session.guild_id
                 try:
                     guild = self.bot.get_guild(guild_id)
@@ -71,16 +70,16 @@ class VerifyCog(commands.Cog):
                         continue
                     role = guild.get_role(role_id)
                     self.logger.info(
-                        f"Adding role to user {session.discord_name} with user id {member.id}"
+                        f"Adding role to ({session.discord_name}, {member.id})"
                     )
                     await member.add_roles(role, reason="Verification Bot")
                 except Exception:
                     self.logger.exception(
                         f"Failed to add role to user in {guild_id}")
                     continue
-                db.delete_session(session_id)
+                self.sm.delete_session(user_id, session.uuid)
 
-            await db.collect_garbage(self.expiry_seconds)
+            await self.sm.collect_garbage()
             await asyncio.sleep(interval)
 
     @commands.command()
@@ -96,10 +95,8 @@ class VerifyCog(commands.Cog):
         user_id = ctx.author.id
         guild_id = ctx.guild.id
         name = f"{ctx.author.name}#{ctx.author.discriminator}"
-        session_id = db.new_session(user_id, guild_id, name)
-        self.logger.info(f"Started new session for {name} {user_id}")
-
-        verification_link = f"{self.url}/start/{session_id}/email"
+        session_uuid = self.sm.try_new(user_id, guild_id, name)
+        verification_link = f"{self.url}/start/{user_id}/{session_uuid}"
 
         embed = discord.Embed(
             title="Verification!",
@@ -124,15 +121,19 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     logging.getLogger("sqlitedict").setLevel(logging.WARNING)
 
-    configdata = settings.discord
-    bot = commands.Bot(command_prefix=configdata.prefix)
+    expiry_seconds: int = settings.common.expiry_s
+    database_file: int = settings.common.database_file
+    sm = db.SessionManager(expiry_seconds, database_file)
+
+    discordconf = settings.discord
+    bot = commands.Bot(command_prefix=discordconf.prefix)
     bot.add_cog(
         VerifyCog(bot=bot,
-                  check_interval=configdata.check_interval_s,
-                  expiry_seconds=configdata.expiry_s,
-                  url=configdata.url,
-                  role_name=configdata.role_name))
-    bot.run(configdata.token)
+                  sm=sm,
+                  check_interval=discordconf.check_interval_s,
+                  url=discordconf.url,
+                  role_name=discordconf.role_name))
+    bot.run(discordconf.token)
 
 
 if __name__ == "__main__":
