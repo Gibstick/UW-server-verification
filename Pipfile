@@ -13,6 +13,7 @@ dynaconf = "*"
 [dev-packages]
 yapf = "*"
 pylint = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.8"
