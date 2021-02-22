@@ -62,13 +62,13 @@ def start(user_id: int, secondary_id: uuid.UUID):
     if session is None:
         abort(404)
 
-    # If the user has entered an email ready, take them to the code
-    # verification form.
+    # Handle other states that shouldn't go to /start.
     if session.state == db.SessionState.WAITING_ON_CODE:
         return redirect_to_verify(user_id, secondary_id)
-
     if session.state == db.SessionState.VERIFIED:
         return redirect(url_for("success"), code=303)
+    if session.state == db.SessionState.FAILED:
+        return redirect(url_for("failure"), code=303)
 
     if request.method == "POST":
         email_addr = request.form["email"]
@@ -115,6 +115,17 @@ def verify_get(user_id: int, secondary_id: uuid.UUID):
         abort(404)
 
     assert remaining_attempts >= 0
+
+    # Handle other states that shouldn't go to /verify
+    if remaining_attempts == 0 or session.state == db.SessionState.FAILED:
+        return redirect(url_for("failure"), code=303)
+    if session.state == db.SessionState.VERIFIED:
+        return redirect(url_for("success"), code=303)
+    if session.state == db.SessionState.WAITING_ON_START:
+        return redirect(url_for("start",
+                                user_id=user_id,
+                                secondary_id=secondary_id),
+                        code=303)
 
     return render_template(
         "verify.html",

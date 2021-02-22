@@ -4,6 +4,7 @@ import datetime
 import enum
 import logging
 import uuid
+import sys
 import random
 from typing import AsyncIterator, Literal, Optional, Tuple, Union
 
@@ -13,6 +14,7 @@ from config import settings
 
 DEFAULT_DATABASE_FILE = settings.common.database_file
 TESTING_VERIFICATION_CODE = "-420"
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 class SessionState(enum.Enum):
@@ -22,11 +24,15 @@ class SessionState(enum.Enum):
     an email.
     2. When we send an email it goes into WAITING_ON_CODE and we wait for the
     user to enter the code.
-    3. When the session is verified, it goes into VERIFIED and can be deleted.
+    3. When the session is verified, it goes into VERIFIED and can be deleted
+    once expired.
+    4. When all attempts have been exhausted, it goes into FAILED and can be
+    deleted once expired.
     """
     WAITING_ON_START = enum.auto()
     WAITING_ON_CODE = enum.auto()
     VERIFIED = enum.auto()
+    FAILED = enum.auto()
 
 
 @dataclass
@@ -177,17 +183,18 @@ class SessionManager(object):
 
             expected_code = session.verification_code
 
+            # NOTE: Don't delete the session yet, to rate limit multiple
+            # attempts.
             if attempted_code == expected_code:
                 session.state = SessionState.VERIFIED
                 db[user_id] = session
-
-                # NOTE: Don't delete the session yet, to rate limit multiple
-                # attempts.
 
                 db.commit()
                 return True
             else:
                 session.remaining_attempts -= 1
+                if session.remaining_attempts == 0:
+                    session.state = SessionState.FAILED
                 db[user_id] = session
                 db.commit()
                 return session.remaining_attempts
