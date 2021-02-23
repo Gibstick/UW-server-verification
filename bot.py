@@ -77,7 +77,6 @@ class VerifyCog(commands.Cog):
                     self.logger.exception(
                         f"Failed to add role to user in {guild_id}")
                     continue
-                self.sm.delete_session(user_id)
 
             await self.sm.collect_garbage()
             await asyncio.sleep(interval)
