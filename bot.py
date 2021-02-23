@@ -114,7 +114,10 @@ class VerifyCog(commands.Cog):
             url=
             "https://uwaterloo.ca/library/sites/ca.library/files/uploads/images/img_0236_0.jpg"
         )
-        await ctx.message.author.send(embed=embed)
+        try:
+            await ctx.message.author.send(embed=embed)
+        except discord.Forbidden:
+            await ctx.message.reply("Unable to send DM. Are you sure you have DMs enabled on this server?")
 
     @commands.command()
     @commands.has_permissions(manage_roles=True)
