@@ -24,15 +24,17 @@ class SessionState(enum.Enum):
     an email.
     2. When we send an email it goes into WAITING_ON_CODE and we wait for the
     user to enter the code.
-    3. When the session is verified, it goes into VERIFIED and can be deleted
-    once expired.
+    3. When the session is verified, it goes into VERIFIED.
     4. When all attempts have been exhausted, it goes into FAILED and can be
+    deleted once expired.
+    5. When the bot assigns the role it goes into COMPLETED and can be
     deleted once expired.
     """
     WAITING_ON_START = enum.auto()
     WAITING_ON_CODE = enum.auto()
     VERIFIED = enum.auto()
     FAILED = enum.auto()
+    COMPLETED = enum.auto()
 
 
 @dataclass
@@ -199,9 +201,30 @@ class SessionManager(object):
                 db.commit()
                 return session.remaining_attempts
 
+    def complete_session(self, user_id: int, uuid: uuid.UUID):
+        """
+        Mark a session as completed.
+
+        A finished session only stays around until it expires to rate-limit
+        further emails.
+        """
+        with SqliteDict(self.database_file) as db:
+            session = self._get(db, user_id, uuid)
+            if session is None:
+                return None
+
+            assert session.state is SessionState.VERIFIED
+            session.state = SessionState.COMPLETED
+            db[user_id] = session
+            db.commit()
+
     def delete_session(self, user_id: int):
         """
         Remove a session from the db.
+
+        Note: this should only be called for expired sessions, or for
+        debugging. Sessions that are done should have "finish_session" called
+        on them.
         """
         with SqliteDict(self.database_file) as db:
             try:

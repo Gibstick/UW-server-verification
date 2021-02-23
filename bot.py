@@ -73,6 +73,7 @@ class VerifyCog(commands.Cog):
                         f"Adding role to ({session.discord_name}, {member.id})"
                     )
                     await member.add_roles(role, reason="Verification Bot")
+                    self.sm.complete_session(user_id, session.uuid)
                 except Exception:
                     self.logger.exception(
                         f"Failed to add role to user in {guild_id}")
