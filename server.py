@@ -133,19 +133,32 @@ def verify_get(user_id: int, secondary_id: uuid.UUID):
     ), 200
 
 
+def set_cache(response):
+    response.cache_control.public = True
+    response.cache_control.max_age = 2592000
+    response.cache_control.immutable = True
+
+
+
 @app.route("/success")
 def success():
-    return render_template("passed_verification.html")
+    response = app.make_response(render_template("passed_verification.html"))
+    set_cache(response)
+    return response
 
 
 @app.route("/failure")
 def failure():
-    return render_template("failed_verification.html")
+    response = app.make_response(render_template("failed_verification.html"))
+    set_cache(response)
+    return response
 
 
 @app.route("/")
 def root():
-    return render_template("index.html")
+    response = app.make_response(render_template("index.html"))
+    set_cache(response)
+    return response
 
 
 @app.errorhandler(404)
