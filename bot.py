@@ -92,6 +92,12 @@ class VerifyCog(commands.Cog):
         if not "verification" in ctx.channel.name.lower():
             return
 
+        # Delete messages that have content after "+verify", because people try
+        # to post their email
+        if ctx.message.clean_content[1:] != "verify":
+            await ctx.message.delete()
+            return
+
         user_id = ctx.author.id
         guild_id = ctx.guild.id
         name = f"{ctx.author.name}#{ctx.author.discriminator}"
