@@ -50,13 +50,15 @@ def create_app(
             abort(404)
 
         # Handle other states that shouldn't go to /start.
-        if session.state == db.SessionState.WAITING_ON_CODE:
+        if session.state is db.SessionState.WAITING_ON_CODE:
             return redirect_to_verify(user_id, secondary_id)
-        if session.state == db.SessionState.VERIFIED:
+        if session.state in (db.SessionState.VERIFIED,
+                             db.SessionState.COMPLETED):
             return redirect(url_for("success"), code=303)
-        if session.state == db.SessionState.FAILED:
+        if session.state is db.SessionState.FAILED:
             return redirect(url_for("failure"), code=303)
 
+        assert session.state is db.SessionState.WAITING_ON_START
 
         if request.method == "POST":
             email_addr = request.form["email"]

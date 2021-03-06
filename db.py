@@ -15,6 +15,7 @@ from config import settings
 DEFAULT_DATABASE_FILE = settings.common.database_file
 TESTING_VERIFICATION_CODE = "-420"
 
+
 class SessionState(enum.Enum):
     """SessionStage describes the possible states of a session.
 
