@@ -98,6 +98,17 @@ class VerifyCog(commands.Cog):
         session_uuid = self.sm.try_new(user_id, guild_id, name)
         verification_link = f"{self.url}/start/{user_id}/{session_uuid}"
 
+        role_id = self.verified_roles.get(guild_id, None)
+        if role_id is None:
+            self.logger.warning(
+                f"Skipping verification for {name} because no role was found in {ctx.guild}"
+            )
+            return
+
+        if role_id in (role.id for role in ctx.author.roles):
+            await ctx.message.reply("You are already verified.")
+            return
+
         embed = discord.Embed(
             title="Verification!",
             url=verification_link,
@@ -117,7 +128,9 @@ class VerifyCog(commands.Cog):
         try:
             await ctx.message.author.send(embed=embed)
         except discord.Forbidden:
-            await ctx.message.reply("Unable to send DM. Are you sure you have DMs enabled on this server?")
+            await ctx.message.reply(
+                "Unable to send DM. Are you sure you have DMs enabled on this server?"
+            )
 
     @commands.command()
     @commands.has_permissions(manage_roles=True)
